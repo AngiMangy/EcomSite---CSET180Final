@@ -44,7 +44,7 @@ def login():
     render_template('cart.html')
 
 # Route for vendors
-@app.route("/vnedor")
+@app.route("/vendor")
 def login():
     render_template('vendor.html')
 
