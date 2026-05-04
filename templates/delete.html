@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<form action = "/boat_delete" method = "POST">
+    <label type="number ">Boat Id to delete:</label>
+    <input type="number" name="id">
+    <button type="submit">Delete Boat</button>
+</form>
+
+{% endblock %}

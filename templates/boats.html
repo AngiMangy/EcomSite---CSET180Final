@@ -1,0 +1,12 @@
+{% extends 'base.html'%}
+{%block body%}
+{% for boat in boats %}
+    <ul>
+        <li>Boat Id: {{ boat[0] }}</li>
+        <li>Boat Name: {{ boat[1] }}</li>
+        <li>Boat Type: {{ boat[2] }}</li>   
+        <li>Owner Id: {{ boat[3] }}</li>
+        <li>Rental Price: {{ boat[4] }}</li>    
+    </ul>
+{% endfor %}
+{%endblock%}

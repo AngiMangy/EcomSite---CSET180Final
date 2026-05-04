@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<form action="/boats_edit" method="POST">
+    <label for="id">Boat Id (boat to update)</label>
+    <input type="number" name="id">
+
+    <label for="name">New Name</label>
+    <input type="text" name="name">
+
+    <label for="type">New Type</label>
+    <input type="text" name="type">
+
+    <label for="rental_price">New Rental Price</label>
+    <input type="text" step="0.01" name="rental_price">
+
+    <button type="submit">Update Boat</button>
+</form>
+{% endblock %}
