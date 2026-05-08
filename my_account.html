@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-container">
+        <header class="simple-header">
+            <a href="store.html" class="logo">amazona</a>
+            <nav>
+                <a href="my_orders.html">Orders</a>
+                <a href="store.html">Store</a>
+                <a href="index.html" id="logoutBtn">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div class="card">
+                <h1>My Account</h1>
+                <div id="account-details"></div>
+            </div>
+        </main>
+    </div>
+    <script>
+    // Fetch and display user details (requires login info in localStorage/session)
+    const email = localStorage.getItem('email');
+    const role = localStorage.getItem('role');
+    if (!email || !role) {
+        document.getElementById('account-details').innerHTML = '<p>Please log in to view your account.</p>';
+    } else {
+        fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, role, password: localStorage.getItem('password') })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const user = data.user;
+                document.getElementById('account-details').innerHTML = `
+                    <p><strong>Name:</strong> ${user.displayName}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Role:</strong> ${role}</p>
+                    <p><strong>Features:</strong> ${user.features.join(', ')}</p>
+                `;
+            } else {
+                document.getElementById('account-details').innerHTML = `<p>${data.message}</p>`;
+            }
+        });
+    }
+        // Logout clears localStorage
+        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+    </script>
+</body>
+</html>
