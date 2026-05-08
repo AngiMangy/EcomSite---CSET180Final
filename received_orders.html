@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Received Orders</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-container">
+        <header class="simple-header">
+            <a href="store.html" class="logo">amazona</a>
+            <nav>
+                <a href="my_account.html">Account</a>
+                <a href="store.html">Store</a>
+                <a href="index.html" id="logoutBtn">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div class="card">
+                <h1>Received Orders</h1>
+                <div id="received-orders-list"></div>
+            </div>
+        </main>
+    </div>
+    <script>
+    const vendorEmail = localStorage.getItem('email');
+    const role = localStorage.getItem('role');
+    if (!vendorEmail || role !== 'vendor') {
+        document.getElementById('received-orders-list').innerHTML = '<p>Please log in as a vendor to view received orders.</p>';
+    } else {
+        fetch('/api/orders', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Filter orders where any item is for this vendor
+                const received = data.orders.filter(order =>
+                    order.items.some(item => item.vendorEmail && item.vendorEmail.toLowerCase() === vendorEmail)
+                );
+                if (received.length === 0) {
+                    document.getElementById('received-orders-list').innerHTML = '<p>No received orders found.</p>';
+                } else {
+                    document.getElementById('received-orders-list').innerHTML = received.map(order => `
+                        <div class="order">
+                            <h3>Order #${order.id} (${order.date})</h3>
+                            <p>Status: ${order.status || 'N/A'}</p>
+                            <p>Total: $${order.totalPrice}</p>
+                            <ul>
+                                ${order.items.filter(item => item.vendorEmail && item.vendorEmail.toLowerCase() === vendorEmail).map(item => `<li>${item.product_name} x${item.quantity} (${item.size}, ${item.color})</li>`).join('')}
+                            </ul>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                document.getElementById('received-orders-list').innerHTML = `<p>${data.message}</p>`;
+            }
+        });
+    }
+        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-container">
+        <header class="simple-header">
+            <a href="store.html" class="logo">amazona</a>
+            <nav>
+                <a href="my_account.html">Account</a>
+                <a href="store.html">Store</a>
+                <a href="index.html" id="logoutBtn">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div class="card">
+                <h1>My Orders</h1>
+                <div id="orders-list"></div>
+            </div>
+        </main>
+    </div>
+    <script>
+    const email = localStorage.getItem('email');
+    if (!email) {
+        document.getElementById('orders-list').innerHTML = '<p>Please log in to view your orders.</p>';
+    } else {
+        fetch('/api/orders', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (data.orders.length === 0) {
+                    document.getElementById('orders-list').innerHTML = '<p>No orders found.</p>';
+                } else {
+                    document.getElementById('orders-list').innerHTML = data.orders.map(order => `
+                        <div class="order">
+                            <h3>Order #${order.id} (${order.date})</h3>
+                            <p>Status: ${order.status || 'N/A'}</p>
+                            <p>Total: $${order.totalPrice}</p>
+                            <ul>
+                                ${order.items.map(item => `<li>${item.product_name} x${item.quantity} (${item.size}, ${item.color})</li>`).join('')}
+                            </ul>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                document.getElementById('orders-list').innerHTML = `<p>${data.message}</p>`;
+            }
+        });
+    }
+        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+    </script>
+</body>
+</html>
