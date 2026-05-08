@@ -17,48 +17,38 @@ conn = engine.connect()
 ## App Routes ##
 
 # Route for LogIn #
+
 @app.route("/")
-def index():
-    return redirect(url_for('login'))
-
-@app.route("/login")
 def login():
-    return render_template('login.html')
-
-@app.route("/signup")
-def signup():
-    return render_template('signup.html')
+    render_template('index.html')
 
 # Route for Products/Store
 @app.route("/store")
-def store():
-    return render_template('store.html')
+def login():
+    render_template('store.html')
 
 # Route for myaccount
 @app.route("/myaccount")
-def myaccount():
-    return render_template('myaccount.html')
+def login():
+    render_template('myaccount.html')
 
 
 # Route for myorders
 @app.route("/myorders")
-def myorders():
-    return render_template('myorders.html')
+def login():
+    render_template('myorders.html')
 
 # Route for cart
 @app.route("/cart")
-def cart():
-    return render_template('cart.html')
+def login():
+    render_template('cart.html')
 
 # Route for vendors
 @app.route("/vendor")
-def vendor():
-    return render_template('vendor.html')
+def login():
+    render_template('vendor.html')
 
 # Route for admin
 @app.route("/admin")
-def admin():
-    return render_template('admin.html')
-
-if __name__ == "__main__":
-    app.run(debug=True)
+def login():
+    render_template('admin.html')

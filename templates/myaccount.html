@@ -1,65 +1,11 @@
-{% extends "base.html" %}
-
-{% block title %}My Account - Vending Co.{% endblock %}
-
-{% block extra_css %}
-<style>
-    .container {
-        max-width: 800px;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
     
-    .nav {
-        justify-content: space-between;
-        margin-bottom: 30px;
-    }
-    
-    .account-info {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 5px;
-        margin-bottom: 30px;
-    }
-    
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
-    }
-    
-    .info-row:last-child {
-        border-bottom: none;
-    }
-    
-    .info-label {
-        font-weight: 600;
-        color: #667eea;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="nav">
-        <h1>Vending Co.</h1>
-        <a href="/logout">Logout</a>
-    </div>
-    
-    <h2>My Account</h2>
-    
-    <div class="account-info">
-        <div class="info-row">
-            <span class="info-label">Username:</span>
-            <span>{{ userinfo.username }}</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">Name:</span>
-            <span>{{ userinfo.first_name }} {{ userinfo.last_name }}</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">Email:</span>
-            <span>{{ userinfo.email }}</span>
-        </div>
-    </div>
-</div>
-{% endblock %}
+</body>
+</html>
