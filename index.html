@@ -11,23 +11,12 @@
     <div class="login-panel">
       <h2 class="login-title">Sign in to Amazona</h2>
       <form id="loginForm" class="login-form">
-        <div class="role-tabs">
-          <button type="button" class="role-tab active" data-role="customer">Customer</button>
-          <button type="button" class="role-tab" data-role="vendor">Vendor</button>
-          <button type="button" class="role-tab" data-role="admin">Admin</button>
-        </div>
         <input type="hidden" id="roleInput" value="customer">
         <div class="form-group">
           <input type="email" id="email" placeholder="Email" required autocomplete="username">
         </div>
         <div class="form-group">
           <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
-        </div>
-        <div class="form-group extra-field hidden" id="vendorExtra">
-          <input type="text" id="vendorCode" placeholder="Vendor Shop ID">
-        </div>
-        <div class="form-group extra-field hidden" id="adminExtra">
-          <input type="text" id="adminCode" placeholder="Admin Access Code">
         </div>
         <div class="form-group hidden" id="confirmPasswordGroup">
           <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password">
@@ -38,38 +27,14 @@
       </form>
     </div>
     <div id="dashboard" class="dashboard">
-      <div class="dashboard-header">
-        <h2 id="dashboardTitle">Welcome back</h2>
-        <p id="welcomeMessage">You are signed in and authorized to access your role-specific dashboard.</p>
-      </div>
-      <div class="dashboard-actions">
-        <span id="roleBadge" class="role-badge">Role</span>
-        <button id="storeButton" class="submit-button alt">Visit Store</button>
-        <button id="logoutButton" class="submit-button alt">Logout</button>
-      </div>
       <div id="dashboardContent" class="dashboard-content"></div>
     </div>
   </div>
 </body>
 </html>
-          <h2 id="dashboardTitle">Welcome back</h2>
-          <p id="welcomeMessage">You are signed in and authorized to access your role-specific dashboard.</p>
-        </div>
-        <div class="dashboard-actions">
-          <span id="roleBadge" class="role-badge">Role</span>
-          <button id="storeButton" class="submit-button alt">Visit Store</button>
-          <button id="logoutButton" class="submit-button alt">Logout</button>
-        </div>
-      </div>
-      <div id="dashboardContent" class="dashboard-content"></div>
-    </div>
-  </div>
 
   <script>
-    const roleTabs = document.querySelectorAll('.role-tab');
     const roleInput = document.getElementById('roleInput');
-    const vendorExtra = document.getElementById('vendorExtra');
-    const adminExtra = document.getElementById('adminExtra');
     const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const loginForm = document.getElementById('loginForm');
@@ -78,113 +43,40 @@
     const loginModeBtn = document.getElementById('loginModeBtn');
     const signupModeBtn = document.getElementById('signupModeBtn');
     const submitButton = document.getElementById('submitButton');
-    const storeButton = document.getElementById('storeButton');
     const loginPanel = document.querySelector('.login-panel');
     const dashboard = document.getElementById('dashboard');
-    const dashboardTitle = document.getElementById('dashboardTitle');
-    const welcomeMessage = document.getElementById('welcomeMessage');
-    const roleBadge = document.getElementById('roleBadge');
     const dashboardContent = document.getElementById('dashboardContent');
-    const logoutButton = document.getElementById('logoutButton');
 
     let authMode = 'login';
 
     function setRole(role) {
-      if (authMode === 'signup' && role === 'admin') {
-        return;
-      }
-
-      roleTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.role === role));
       roleInput.value = role;
-      vendorExtra.classList.toggle('hidden', role !== 'vendor');
-      adminExtra.classList.toggle('hidden', role !== 'admin');
-
       noteText.textContent = authMode === 'login'
-        ? {
-            customer: 'Login as a buyer to shop the marketplace.',
-            vendor: 'Login as a vendor to manage your store.',
-            admin: 'Login as an admin to manage the platform.'
-          }[role]
-        : {
-            customer: 'Sign up as a buyer to start shopping.',
-            vendor: 'Sign up as a vendor to begin selling.',
-            admin: 'Admin self-registration is not available.'
-          }[role];
-    }
-
-    function updateRoleTabs() {
-      roleTabs.forEach(btn => {
-        const isDisabled = authMode === 'signup' && btn.dataset.role === 'admin';
-        btn.disabled = isDisabled;
-        btn.classList.toggle('disabled', isDisabled);
-      });
+        ? 'Login as a buyer to shop the marketplace.'
+        : 'Sign up as a buyer to start shopping.';
     }
 
     function setAuthMode(mode) {
       authMode = mode;
-      loginModeBtn.classList.toggle('active', mode === 'login');
-      signupModeBtn.classList.toggle('active', mode === 'signup');
+      loginModeBtn?.classList.toggle('active', mode === 'login');
+      signupModeBtn?.classList.toggle('active', mode === 'signup');
       confirmPasswordGroup.classList.toggle('hidden', mode === 'login');
       submitButton.textContent = mode === 'login' ? 'Sign In' : 'Create Account';
       authActionText.innerHTML = mode === 'login'
         ? 'New here? <button type="button" id="toggleAuthMode">Create one</button>'
         : 'Already have an account? <button type="button" id="toggleAuthMode">Sign In</button>';
 
-      if (authMode === 'signup' && roleInput.value === 'admin') {
-        setRole('customer');
-      } else {
-        setRole(roleInput.value);
-      }
-
-      updateRoleTabs();
-      document.getElementById('toggleAuthMode').addEventListener('click', () => {
-        setAuthMode(authMode === 'login' ? 'signup' : 'login');
-      });
+      setRole(roleInput.value);
     }
 
     function buildDashboard(role, user) {
-      dashboardTitle.textContent = `Hello, ${user.displayName}`;
-      welcomeMessage.textContent = `You are signed in as ${role.charAt(0).toUpperCase() + role.slice(1)}.`;
-      roleBadge.textContent = role.toUpperCase();
-      dashboardContent.innerHTML = `
-        <div class="dashboard-section">
-          <h3 class="section-title">Authorized Access</h3>
-          <p>This dashboard is available only to authenticated ${role} users.</p>
-          <ul class="feature-list">
-            ${user.features.map(feature => `<li>${feature}</li>`).join('')}
-          </ul>
-        </div>
-        ${role === 'admin' ? `
-          <div class="dashboard-section">
-            <h3 class="section-title">Admin Controls</h3>
-            <p>Admins can review users, approve vendors, and manage system settings.</p>
-          </div>
-        ` : ''}
-        ${role === 'vendor' ? `
-          <div class="dashboard-section">
-            <h3 class="section-title">Vendor Tools</h3>
-            <p>Vendors can update product listings and monitor their store performance.</p>
-          </div>
-        ` : ''}
-        ${role === 'customer' ? `
-          <div class="dashboard-section">
-            <h3 class="section-title">Shop Experience</h3>
-            <p>Customers can browse the marketplace and place new orders securely.</p>
-          </div>
-        ` : ''}
-      `;
+      // Dashboard content can be used for future features
     }
 
-    function showDashboard(role, user, vendorCode) {
-      loginPanel.classList.add('hidden');
-      dashboard.classList.remove('hidden');
-      dashboard.classList.add('visible');
-      buildDashboard(role, user);
+    function showDashboard(role, user) {
       const authPayload = { role, user };
-      if (vendorCode) {
-        authPayload.vendorCode = vendorCode;
-      }
       localStorage.setItem('authenticatedUser', JSON.stringify(authPayload));
+      window.location.href = 'store.html';
     }
 
     function showLogin() {
@@ -197,20 +89,21 @@
       localStorage.removeItem('authenticatedUser');
     }
 
-    roleTabs.forEach(button => {
-      button.addEventListener('click', () => setRole(button.dataset.role));
+    // Event delegation for the toggle auth mode button
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'toggleAuthMode') {
+        setAuthMode(authMode === 'login' ? 'signup' : 'login');
+      }
     });
 
-    loginModeBtn.addEventListener('click', () => setAuthMode('login'));
-    signupModeBtn.addEventListener('click', () => setAuthMode('signup'));
+    loginModeBtn?.addEventListener('click', () => setAuthMode('login'));
+    signupModeBtn?.addEventListener('click', () => setAuthMode('signup'));
 
     loginForm.addEventListener('submit', async event => {
       event.preventDefault();
       const role = roleInput.value;
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
-      const vendorCode = document.getElementById('vendorCode').value.trim();
-      const adminCode = document.getElementById('adminCode').value.trim();
       const confirmPassword = confirmPasswordInput.value.trim();
 
       if (!email || !password) {
@@ -223,23 +116,13 @@
         return;
       }
 
-      if (role === 'vendor' && !vendorCode) {
-        alert('Please enter your Vendor Shop ID.');
-        return;
-      }
-
       if (authMode === 'signup' && role === 'admin') {
         alert('Admin self-registration is not available. Please sign in with an existing admin account.');
         return;
       }
 
-      if (role === 'admin' && authMode === 'login' && !adminCode) {
-        alert('Please enter the Admin Access Code.');
-        return;
-      }
-
       const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
-      const payload = { role, email, password, vendorCode, adminCode, confirmPassword };
+      const payload = { role, email, password, confirmPassword };
 
       try {
         const response = await fetch(endpoint, {
@@ -254,15 +137,10 @@
           return;
         }
 
-        showDashboard(result.role, result.user, result.vendorCode);
+        showDashboard(result.role, result.user);
       } catch (error) {
         alert('Unable to reach the authentication server. Please start the backend and try again.');
       }
-    });
-
-    logoutButton.addEventListener('click', showLogin);
-    storeButton.addEventListener('click', () => {
-      window.location.href = 'store.html';
     });
 
     window.addEventListener('load', () => {
