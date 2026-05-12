@@ -5,53 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Account</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .page-container { background: #0f172a; }
+        .simple-header { background: #1e293b; border-bottom: 1px solid #334155; }
+        .simple-header .logo { color: #febd69; }
+        .simple-header nav a { color: #e2e8f0; }
+        .simple-header nav a:hover { color: #febd69; }
+        main { align-items: flex-start; justify-content: center; padding: 32px 24px; }
+        .account-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 36px 32px;
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .account-card h1 { color: #f1f5f9; margin: 0 0 28px; font-size: 1.8rem; }
+        .info-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #334155; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; color: #94a3b8; min-width: 130px; }
+        .info-value { color: #e2e8f0; }
+        .role-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 99px;
+            font-size: 0.8em;
+            font-weight: 600;
+            background: #22c55e22;
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+    </style>
 </head>
 <body>
     <div class="page-container">
         <header class="simple-header">
             <a href="store.html" class="logo">amazona</a>
             <nav>
-                <a href="my_orders.html">Orders</a>
                 <a href="store.html">Store</a>
                 <a href="index.html" id="logoutBtn">Logout</a>
             </nav>
         </header>
         <main>
-            <div class="card">
+            <div class="account-card">
                 <h1>My Account</h1>
-                <div id="account-details"></div>
+                <div id="account-details"><p style="color:#94a3b8;">Loading...</p></div>
             </div>
         </main>
     </div>
     <script>
-    // Fetch and display user details (requires login info in localStorage/session)
-    const email = localStorage.getItem('email');
-    const role = localStorage.getItem('role');
-    if (!email || !role) {
-        document.getElementById('account-details').innerHTML = '<p>Please log in to view your account.</p>';
-    } else {
-        fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, role, password: localStorage.getItem('password') })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const user = data.user;
-                document.getElementById('account-details').innerHTML = `
-                    <p><strong>Name:</strong> ${user.displayName}</p>
-                    <p><strong>Email:</strong> ${user.email}</p>
-                    <p><strong>Role:</strong> ${role}</p>
-                    <p><strong>Features:</strong> ${user.features.join(', ')}</p>
-                `;
-            } else {
-                document.getElementById('account-details').innerHTML = `<p>${data.message}</p>`;
-            }
-        });
-    }
-        // Logout clears localStorage
-        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+        const stored = localStorage.getItem('authenticatedUser');
+        const container = document.getElementById('account-details');
+
+        if (!stored) {
+            container.innerHTML = '<p>You are not logged in. <a href="index.html" style="color:#febd69;">Sign in</a></p>';
+        } else {
+            const auth = JSON.parse(stored);
+            const user = auth.user;
+            const role = auth.role;
+
+            const roleColors = { admin: '#f59e0b', vendor: '#3b82f6', customer: '#22c55e' };
+            const color = roleColors[role] || '#22c55e';
+
+            container.innerHTML = `
+                <div class="info-row"><span class="info-label">First Name</span><span class="info-value">${user.firstName || '—'}</span></div>
+                <div class="info-row"><span class="info-label">Last Name</span><span class="info-value">${user.lastName || '—'}</span></div>
+                <div class="info-row"><span class="info-label">Username</span><span class="info-value">${user.username || '—'}</span></div>
+                <div class="info-row"><span class="info-label">Email</span><span class="info-value">${user.email || '—'}</span></div>
+                <div class="info-row">
+                    <span class="info-label">Account Type</span>
+                    <span class="info-value">
+                        <span style="display:inline-block;padding:2px 12px;border-radius:99px;font-size:0.8em;font-weight:600;background:${color}22;color:${color};border:1px solid ${color};">
+                            ${role.charAt(0).toUpperCase() + role.slice(1)}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Features</span>
+                    <span class="info-value">${(user.features || []).join('<br>')}</span>
+                </div>
+            `;
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => localStorage.clear());
     </script>
 </body>
 </html>

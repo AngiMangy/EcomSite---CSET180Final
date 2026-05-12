@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .page-container { background: #0f172a; }
+        .simple-header { background: #1e293b; border-bottom: 1px solid #334155; }
+        .simple-header .logo { color: #febd69; }
+        .simple-header nav a { color: #e2e8f0; }
+        .simple-header nav a:hover { color: #febd69; }
+        main { align-items: flex-start; padding: 32px 24px; }
+        .orders-wrap { max-width: 680px; width: 100%; margin: 0 auto; }
+        .orders-wrap h1 { font-size: 1.8rem; margin: 0 0 24px; color: #f1f5f9; }
+    </style>
 </head>
 <body>
     <div class="page-container">
@@ -17,45 +28,56 @@
             </nav>
         </header>
         <main>
-            <div class="card">
+            <div class="orders-wrap">
                 <h1>My Orders</h1>
-                <div id="orders-list"></div>
+                <div id="orders-list"><p style="color:#94a3b8;">Loading...</p></div>
             </div>
         </main>
     </div>
     <script>
-    const email = localStorage.getItem('email');
-    if (!email) {
-        document.getElementById('orders-list').innerHTML = '<p>Please log in to view your orders.</p>';
-    } else {
-        fetch('/api/orders', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                if (data.orders.length === 0) {
-                    document.getElementById('orders-list').innerHTML = '<p>No orders found.</p>';
-                } else {
-                    document.getElementById('orders-list').innerHTML = data.orders.map(order => `
-                        <div class="order">
-                            <h3>Order #${order.id} (${order.date})</h3>
-                            <p>Status: ${order.status || 'N/A'}</p>
-                            <p>Total: $${order.totalPrice}</p>
-                            <ul>
-                                ${order.items.map(item => `<li>${item.product_name} x${item.quantity} (${item.size}, ${item.color})</li>`).join('')}
-                            </ul>
+        const auth = JSON.parse(localStorage.getItem('authenticatedUser') || 'null');
+        if (!auth || !auth.user) {
+            document.getElementById('orders-list').innerHTML = '<p style="color:#94a3b8;">Please log in to view your orders.</p>';
+        } else {
+            fetch(`/api/orders?userId=${auth.user.userID}`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('orders-list');
+                    if (!Array.isArray(data) || data.length === 0) {
+                        list.innerHTML = '<p style="color:#94a3b8;">No orders found.</p>';
+                        return;
+                    }
+                    const statusColor = {
+                        confirmed: '#22c55e', shipped: '#3b82f6',
+                        'out for delivery': '#f59e0b', pending: '#94a3b8'
+                    };
+                    list.innerHTML = data.map(order => `
+                        <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;margin-bottom:14px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                                <span style="font-weight:600;color:#94a3b8;font-size:0.85em;">ORDER #${order.id}</span>
+                                <span style="background:${statusColor[order.status] || '#94a3b8'}22;color:${statusColor[order.status] || '#94a3b8'};border:1px solid ${statusColor[order.status] || '#94a3b8'};border-radius:99px;padding:2px 12px;font-size:0.8em;font-weight:600;">
+                                    ${order.status}
+                                </span>
+                            </div>
+                            <p style="margin:0 0 6px;font-size:1em;font-weight:600;">${order.product_name}</p>
+                            <p style="margin:0 0 4px;font-size:0.85em;color:#94a3b8;">
+                                Qty: ${order.quantity}
+                                ${order.size ? ' &nbsp;·&nbsp; Size: ' + order.size : ''}
+                                ${order.color ? ' &nbsp;·&nbsp; Color: ' + order.color : ''}
+                            </p>
+                            <p style="margin:0 0 4px;font-size:0.85em;color:#94a3b8;">Vendor: ${order.vendorEmail}</p>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+                                <span style="font-weight:600;font-size:1em;">$${(order.price * order.quantity).toFixed(2)}</span>
+                                <span style="font-size:0.75em;color:#475569;">${order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}</span>
+                            </div>
                         </div>
                     `).join('');
-                }
-            } else {
-                document.getElementById('orders-list').innerHTML = `<p>${data.message}</p>`;
-            }
-        });
-    }
-        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+                })
+                .catch(() => {
+                    document.getElementById('orders-list').innerHTML = '<p style="color:#f87171;">Could not load orders.</p>';
+                });
+        }
+        document.getElementById('logoutBtn').onclick = () => localStorage.clear();
     </script>
 </body>
 </html>

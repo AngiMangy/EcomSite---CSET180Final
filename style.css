@@ -440,7 +440,7 @@ header {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .note {
@@ -475,7 +475,7 @@ header {
 
 .store-page {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1400px;
   padding: 24px;
 }
 
@@ -507,8 +507,8 @@ header {
 
 .store-card,
 .info-panel {
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 20px;
   padding: 22px;
 }
@@ -516,6 +516,7 @@ header {
 .store-card h3,
 .info-panel h3 {
   margin-top: 0;
+  color: #f1f5f9;
 }
 
 .store-card p,
@@ -663,7 +664,7 @@ header {
 
 .search-field label {
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: #e2e8f0;
   font-weight: 500;
 }
 
@@ -672,9 +673,9 @@ header {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #0f172a;
-  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: #1e293b;
+  color: #f1f5f9;
   font-size: 0.95rem;
 }
 
@@ -714,8 +715,8 @@ header {
 }
 
 .product-card {
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 16px;
   padding: 18px;
   display: flex;
@@ -739,7 +740,7 @@ header {
 .product-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #e2e8f0;
+  color: #f1f5f9;
   flex: 1;
 }
 
@@ -763,7 +764,7 @@ header {
 
 .product-description {
   margin: 0;
-  color: #cbd5e1;
+  color: #e2e8f0;
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -771,7 +772,7 @@ header {
 .product-details {
   display: grid;
   gap: 8px;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   padding: 12px;
   border-radius: 10px;
 }
@@ -785,11 +786,11 @@ header {
 
 .detail-item .label {
   color: #94a3b8;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .detail-item .value {
-  color: #cbd5e1;
+  color: #e2e8f0;
 }
 
 .product-footer {
@@ -827,28 +828,28 @@ header {
 .product-table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.7);
   border-radius: 10px;
   overflow: hidden;
 }
 
 .product-table thead {
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(30, 41, 59, 0.95);
 }
 
 .product-table th {
   padding: 12px;
   text-align: left;
-  color: #cbd5e1;
+  color: #f1f5f9;
   font-weight: 600;
   font-size: 0.9rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .product-table td {
   padding: 12px;
-  color: #cbd5e1;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   font-size: 0.9rem;
 }
 
@@ -887,8 +888,8 @@ header {
 
 /* Product Form Styles */
 .product-form-card {
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 16px;
   padding: 20px;
 }
@@ -896,7 +897,7 @@ header {
 .product-form-card h4 {
   margin-top: 0;
   margin-bottom: 16px;
-  color: #e2e8f0;
+  color: #f1f5f9;
 }
 
 #productForm {
@@ -905,7 +906,7 @@ header {
 }
 
 #productForm label {
-  color: #cbd5e1;
+  color: #e2e8f0;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -918,9 +919,9 @@ header {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #0f172a;
-  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: #1e293b;
+  color: #f1f5f9;
   font-family: inherit;
 }
 
@@ -963,7 +964,15 @@ header {
 
 .vendor-manager {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .vendor-manager {
+    grid-template-columns: 1fr;
+  }
 }
 
 .product-list {
@@ -1015,7 +1024,7 @@ header {
 }
 
 .modal.hidden {
-  display: none;
+  display: none !important;
 }
 
 .modal-content {
@@ -1326,7 +1335,7 @@ header {
 }
 
 .tab-content.hidden {
-  display: none;
+  display: none !important;
 }
 
 /* Orders Section */

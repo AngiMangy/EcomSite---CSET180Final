@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marketplace Store</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #0f172a; color: #e2e8f0; }
+  </style>
 </head>
 <body>
   <div class="store-page">
@@ -18,6 +21,10 @@
           <span id="cartCount" class="cart-badge">0</span>
           Cart
         </button>
+        <a href="my_orders.html" id="myOrdersLink" class="submit-button alt hidden" style="text-decoration:none;">My Orders</a>
+        <a href="my_requests.html" id="myRequestsLink" class="submit-button alt hidden" style="text-decoration:none;">My Requests</a>
+        <a href="received_orders.html" id="receivedOrdersLink" class="submit-button alt hidden" style="text-decoration:none;">Received Orders</a>
+        <a href="my_account.html" class="submit-button alt" style="text-decoration:none;">My Account</a>
         <button id="backButton" class="submit-button alt">Dashboard</button>
         <button id="logoutButton" class="submit-button">Logout</button>
       </div>
@@ -49,6 +56,74 @@
           <button id="checkoutButton" class="submit-button">Proceed to Checkout</button>
           <button id="clearCartButton" class="submit-button alt">Clear Cart</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div id="checkoutModal" class="modal hidden">
+    <div class="modal-content" style="max-width:520px;">
+      <div class="modal-header">
+        <h2>Checkout</h2>
+        <button id="closeCheckoutModal" class="close-button">&times;</button>
+      </div>
+      <form id="checkoutForm" style="padding:0 8px 8px;">
+        <h3 style="margin:12px 0 8px;font-size:1em;color:#94a3b8;">Shipping Information</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label style="font-size:0.85em;">First Name</label><input type="text" placeholder="John" required style="width:100%;box-sizing:border-box;"></div>
+          <div><label style="font-size:0.85em;">Last Name</label><input type="text" placeholder="Doe" required style="width:100%;box-sizing:border-box;"></div>
+        </div>
+        <label style="font-size:0.85em;display:block;margin-top:8px;">Address</label>
+        <input type="text" placeholder="123 Main St" required style="width:100%;box-sizing:border-box;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <div><label style="font-size:0.85em;">City</label><input type="text" placeholder="New York" required style="width:100%;box-sizing:border-box;"></div>
+          <div><label style="font-size:0.85em;">ZIP Code</label><input type="text" placeholder="10001" required style="width:100%;box-sizing:border-box;"></div>
+        </div>
+        <h3 style="margin:16px 0 8px;font-size:1em;color:#94a3b8;">Payment Information</h3>
+        <label style="font-size:0.85em;">Card Number</label>
+        <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" required style="width:100%;box-sizing:border-box;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <div><label style="font-size:0.85em;">Expiry Date</label><input type="text" placeholder="MM/YY" maxlength="5" required style="width:100%;box-sizing:border-box;"></div>
+          <div><label style="font-size:0.85em;">CVV</label><input type="text" placeholder="123" maxlength="3" required style="width:100%;box-sizing:border-box;"></div>
+        </div>
+        <div id="checkoutOrderSummary" style="margin-top:16px;padding:12px;background:#1e293b;border-radius:8px;font-size:0.9em;"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button type="submit" class="submit-button" style="flex:1;">Place Order</button>
+          <button type="button" id="cancelCheckoutButton" class="submit-button alt">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reviews Modal -->
+  <div id="reviewsModal" class="modal hidden">
+    <div class="modal-content" style="max-width:540px;">
+      <div class="modal-header">
+        <h2 id="reviewsModalTitle">Product Reviews</h2>
+        <button id="closeReviewsModal" class="close-button">&times;</button>
+      </div>
+      <div style="padding:0 8px 8px;">
+        <div id="existingReviews" style="max-height:280px;overflow-y:auto;margin-bottom:16px;"></div>
+        <div id="reviewFormWrap">
+          <h3 style="margin:0 0 12px;font-size:1em;color:#94a3b8;border-top:1px solid #334155;padding-top:14px;">Leave a Review</h3>
+          <form id="reviewForm">
+            <div style="margin-bottom:12px;">
+              <label style="font-size:0.85em;display:block;margin-bottom:6px;">Rating</label>
+              <div id="starSelector" style="display:flex;gap:6px;font-size:1.8em;cursor:pointer;">
+                <span class="star" data-value="1">☆</span>
+                <span class="star" data-value="2">☆</span>
+                <span class="star" data-value="3">☆</span>
+                <span class="star" data-value="4">☆</span>
+                <span class="star" data-value="5">☆</span>
+              </div>
+              <input type="hidden" id="reviewRating" value="0">
+            </div>
+            <label style="font-size:0.85em;display:block;margin-bottom:4px;">Comment (optional)</label>
+            <textarea id="reviewText" placeholder="Share your experience..." rows="3" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+            <button type="submit" class="submit-button" style="margin-top:10px;width:100%;">Submit Review</button>
+          </form>
+        </div>
+        <p id="alreadyReviewedMsg" class="hidden" style="color:#94a3b8;text-align:center;font-size:0.9em;">You have already reviewed this product.</p>
       </div>
     </div>
   </div>
@@ -174,41 +249,33 @@
 
     async function fetchProducts() {
       const response = await fetch('/api/products');
-      if (!response.ok) {
-        throw new Error('Unable to fetch products.');
-      }
-      const data = await response.json();
-      return data.products || [];
+      if (!response.ok) throw new Error('Unable to fetch products.');
+      return await response.json();
+    }
+
+    async function fetchVendors() {
+      const response = await fetch('/api/vendors');
+      if (!response.ok) throw new Error('Unable to fetch vendors.');
+      return await response.json();
     }
 
     async function searchProducts(filters) {
       const params = new URLSearchParams();
-      if (filters.name) params.append('name', filters.name);
-      if (filters.description) params.append('description', filters.description);
-      if (filters.vendor) params.append('vendor', filters.vendor);
-      if (filters.category) params.append('category', filters.category);
-      if (filters.color) params.append('color', filters.color);
-      if (filters.size) params.append('size', filters.size);
-      if (filters.inStock !== undefined) params.append('inStock', filters.inStock);
+      if (filters.name) params.append('q', filters.name);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
 
       const response = await fetch(`/api/products/search?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Unable to search products.');
-      }
-      const data = await response.json();
-      return data.products || [];
+      if (!response.ok) throw new Error('Unable to search products.');
+      return await response.json();
     }
 
     async function loadCart() {
       try {
-        const response = await fetch('/api/cart', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentAuth.user.email })
-        });
+        const response = await fetch(`/api/cart?userId=${currentAuth.user.userID}`);
         const data = await response.json();
         if (response.ok) {
-          cart = { items: data.items || [] };
+          cart = { items: Array.isArray(data) ? data : [] };
           updateCartBadge();
         }
       } catch (error) {
@@ -222,7 +289,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: currentAuth.user.email,
+            userId: currentAuth.user.userID,
             productId,
             quantity,
             size,
@@ -232,6 +299,7 @@
         const data = await response.json();
         if (response.ok) {
           await loadCart();
+          await loadAndDisplayProducts(currentFilters);
           alert('Product added to cart!');
         } else {
           alert(data.message || 'Unable to add product to cart.');
@@ -310,37 +378,22 @@
         const response = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentAuth.user.email })
+          body: JSON.stringify({ userId: currentAuth.user.userID })
         });
         const data = await response.json();
         if (response.ok) {
+          document.getElementById('checkoutModal').classList.add('hidden');
           cartModal.classList.add('hidden');
-          alert(`Order placed successfully! Order ID: ${data.order.id}`);
           cart = { items: [] };
           updateCartBadge();
+          renderCartItems();
+          alert('Order placed successfully! Thank you for your purchase.');
         } else {
           alert(data.message || 'Unable to place order.');
         }
       } catch (error) {
         alert('Error placing order.');
       }
-    }
-
-    async function loadOrderHistory() {
-      try {
-        const response = await fetch('/api/orders', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentAuth.user.email })
-        });
-        const data = await response.json();
-        if (response.ok) {
-          return data.orders || [];
-        }
-      } catch (error) {
-        console.error('Unable to load orders:', error);
-      }
-      return [];
     }
 
     function updateCartBadge() {
@@ -424,7 +477,10 @@
     }
 
     function renderProductCard(product) {
-      const stockStatus = product.inStock ? '<span class="stock-badge in-stock">In Stock</span>' : '<span class="stock-badge out-of-stock">Out of Stock</span>';
+      const inStock = product.stockCount > 0;
+      const stockStatus = inStock
+        ? `<span class="stock-badge in-stock">In Stock (${product.stockCount})</span>`
+        : '<span class="stock-badge out-of-stock">Out of Stock</span>';
       const gallery = product.gallery || [];
       const thumbnailsHTML = gallery.length > 0 ? `
         <div class="product-gallery">
@@ -436,35 +492,54 @@
         </div>
       ` : '<div class="product-gallery"><p class="no-images">No images available</p></div>';
 
+      const colors = (product.colors || []).length > 0 ? product.colors.join(', ') : 'N/A';
+      const sizes = (product.sizes || []).length > 0 ? product.sizes.join(', ') : 'N/A';
+
+      const stars = product.avgRating
+        ? '★'.repeat(Math.round(product.avgRating)) + '☆'.repeat(5 - Math.round(product.avgRating))
+        : '☆☆☆☆☆';
+      const ratingHTML = `<span style="color:#f59e0b;font-size:0.9em;" title="${product.avgRating || 'No ratings yet'}">${stars}</span>
+        <span style="color:#94a3b8;font-size:0.8em;"> ${product.avgRating ? product.avgRating + ' ('+product.reviewCount+')' : 'No reviews'}</span>`;
+
       return `
         <div class="product-card">
           <div class="product-header">
             <h3>${product.name}</h3>
             ${stockStatus}
           </div>
+          <div style="margin:-4px 0 8px;">${ratingHTML}</div>
           ${thumbnailsHTML}
-          <p class="product-description">${product.description}</p>
+          <p class="product-description">${product.description || ''}</p>
           <div class="product-details">
             <div class="detail-item">
               <span class="label">Category:</span>
               <span class="value">${product.category || 'N/A'}</span>
             </div>
             <div class="detail-item">
-              <span class="label">Color:</span>
-              <span class="value">${product.color || 'N/A'}</span>
+              <span class="label">Colors:</span>
+              <span class="value">${colors}</span>
             </div>
             <div class="detail-item">
-              <span class="label">Size:</span>
-              <span class="value">${product.size || 'N/A'}</span>
+              <span class="label">Sizes:</span>
+              <span class="value">${sizes}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Warranty:</span>
+              <span class="value">${product.warrantyPeriod || 'N/A'}</span>
             </div>
             <div class="detail-item">
               <span class="label">Vendor:</span>
-              <span class="value">${product.vendorEmail}</span>
+              <span class="value">${product.vendorUsername || 'N/A'}</span>
             </div>
           </div>
           <div class="product-footer">
             <span class="price">${formatCurrency(product.price)}</span>
-            <button class="add-to-cart-btn" data-product-id="${product.id}">Add to Cart</button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="add-to-cart-btn" data-product-id="${product.id}" ${!inStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                ${inStock ? 'Add to Cart' : 'Out of Stock'}
+              </button>
+              <button class="review-btn submit-button alt" data-product-id="${product.id}" data-product-name="${product.name}">Reviews</button>
+            </div>
           </div>
         </div>
       `;
@@ -474,14 +549,11 @@
       storeTitle.textContent = `Welcome to the Marketplace, ${user.displayName}`;
       storeSubtitle.textContent = 'Browse products, search by name or description, and filter by category, color, size, or availability.';
       cartButton.classList.remove('hidden');
-      
+      document.getElementById('myOrdersLink').classList.remove('hidden');
+      document.getElementById('myRequestsLink').classList.remove('hidden');
+
       storeContent.innerHTML = `
         <div class="customer-store">
-          <div class="view-tabs">
-            <button class="tab-button active" data-tab="products">Products</button>
-            <button class="tab-button" data-tab="orders">Order History</button>
-          </div>
-
           <div id="productsTab" class="tab-content active">
             <div class="search-filter-panel">
               <div class="search-section">
@@ -536,14 +608,6 @@
             </div>
           </div>
 
-          <div id="ordersTab" class="tab-content hidden">
-            <div class="orders-section">
-              <h3>My Order History</h3>
-              <div id="ordersContainer" class="orders-list">
-                <p>Loading orders...</p>
-              </div>
-            </div>
-          </div>
         </div>
       `;
 
@@ -551,69 +615,8 @@
       await loadCart();
       attachCustomerSearchEvents();
       await loadAndDisplayProducts({});
-      attachTabButtons();
     }
 
-    function attachTabButtons() {
-      const tabButtons = document.querySelectorAll('.tab-button');
-      const tabContents = document.querySelectorAll('.tab-content');
-
-      tabButtons.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const tabName = e.target.dataset.tab;
-          
-          // Update active tab button
-          tabButtons.forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-
-          // Update active tab content
-          tabContents.forEach(content => content.classList.add('hidden'));
-          document.getElementById(tabName + 'Tab').classList.remove('hidden');
-
-          // Load orders if switching to orders tab
-          if (tabName === 'orders') {
-            await displayOrderHistory();
-          }
-        });
-      });
-    }
-
-    async function displayOrderHistory() {
-      const container = document.getElementById('ordersContainer');
-      try {
-        const orders = await loadOrderHistory();
-        if (orders.length === 0) {
-          container.innerHTML = '<p class="empty-orders">No orders yet. Start shopping!</p>';
-          return;
-        }
-
-        const ordersHTML = orders.map(order => `
-          <div class="order-card">
-            <div class="order-header">
-              <h4>Order #${order.id}</h4>
-              <span class="order-date">${order.date}</span>
-            </div>
-            <div class="order-items">
-              ${order.items.map(item => `
-                <div class="order-item">
-                  <span class="item-name">${item.product_name}</span>
-                  <span class="item-variant">${item.size || 'N/A'} / ${item.color || 'N/A'}</span>
-                  <span class="item-qty">Qty: ${item.quantity}</span>
-                  <span class="item-price">${formatCurrency(item.price)}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div class="order-footer">
-              <span class="order-total">Total: ${formatCurrency(order.totalPrice)}</span>
-            </div>
-          </div>
-        `).join('');
-
-        container.innerHTML = ordersHTML;
-      } catch (error) {
-        container.innerHTML = '<p class="error-message">Unable to load orders. Please try again later.</p>';
-      }
-    }
 
     function attachCustomerSearchEvents() {
       const searchButton = document.getElementById('searchButton');
@@ -668,6 +671,7 @@
 
         container.innerHTML = products.map(product => renderProductCard(product)).join('');
         attachAddToCartEvents();
+        attachReviewEvents();
       } catch (error) {
         container.innerHTML = '<p class="error-message">Unable to load products. Please try again later.</p>';
       }
@@ -752,32 +756,11 @@
       storeTitle.textContent = `Admin Control Center, ${user.displayName}`;
       storeSubtitle.textContent = 'Review platform performance, manage vendors, and handle approvals.';
       cartButton.classList.add('hidden');
+      document.getElementById('receivedOrdersLink').classList.remove('hidden');
       storeContent.innerHTML = `
-        <div class="stats-grid">
-          <div class="store-card">
-            <h3>Platform Overview</h3>
-            <ul>
-              <li>Registered customers: 4,320</li>
-              <li>Active vendors: 321</li>
-              <li>Pending approvals: 8</li>
-            </ul>
-          </div>
-          <div class="store-card">
-            <h3>Action Items</h3>
-            <ul>
-              <li>Review vendor onboarding requests</li>
-              <li>Audit the latest order dispute</li>
-              <li>Check system health metrics</li>
-            </ul>
-          </div>
-          <div class="store-card">
-            <h3>Platform Trends</h3>
-            <ul>
-              <li>Daily orders: 5,120</li>
-              <li>Gross merchandise value: $180K</li>
-              <li>Top category: Electronics</li>
-            </ul>
-          </div>
+        <div class="store-card">
+          <h3>Pending Account Approvals</h3>
+          <div id="pendingApprovals"><p>Loading...</p></div>
         </div>
         <div class="store-card">
           <h3>Product Management</h3>
@@ -785,34 +768,85 @@
         </div>
       `;
       currentAuth = { role: 'admin', user: user, adminCode: user.adminCode || 'ADMINCODE' };
+      renderPendingApprovals();
       renderAdminManagement();
     }
 
+    async function renderPendingApprovals() {
+      const container = document.getElementById('pendingApprovals');
+      try {
+        const response = await fetch('/api/admin/pending-users');
+        const users = await response.json();
+
+        if (!Array.isArray(users) || users.length === 0) {
+          container.innerHTML = '<p>No pending accounts.</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="product-table">
+            <thead>
+              <tr><th>Email</th><th>Username</th><th>Role</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${users.map(u => `
+                <tr id="pending-row-${u.userID}">
+                  <td>${u.email}</td>
+                  <td>${u.username}</td>
+                  <td>${u.is_vendor ? 'Vendor' : 'Customer'}</td>
+                  <td>
+                    <button class="approve-user-btn" data-id="${u.userID}">Approve</button>
+                    <button class="reject-user-btn" data-id="${u.userID}">Reject</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        container.querySelectorAll('.approve-user-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const res = await fetch(`/api/admin/users/${id}/approve`, { method: 'PUT' });
+            if (res.ok) {
+              document.getElementById(`pending-row-${id}`)?.remove();
+              if (!container.querySelector('tr[id^="pending-row-"]')) {
+                container.innerHTML = '<p>No pending accounts.</p>';
+              }
+            } else {
+              alert('Failed to approve user.');
+            }
+          });
+        });
+
+        container.querySelectorAll('.reject-user-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Reject and delete this account?')) return;
+            const id = btn.dataset.id;
+            const res = await fetch(`/api/admin/users/${id}/reject`, { method: 'DELETE' });
+            if (res.ok) {
+              document.getElementById(`pending-row-${id}`)?.remove();
+              if (!container.querySelector('tr[id^="pending-row-"]')) {
+                container.innerHTML = '<p>No pending accounts.</p>';
+              }
+            } else {
+              alert('Failed to reject user.');
+            }
+          });
+        });
+
+      } catch (e) {
+        container.innerHTML = '<p class="error-message">Unable to load pending approvals.</p>';
+      }
+    }
+
     async function buildVendorView(auth) {
-      storeTitle.textContent = `Vendor Store Portal, ${auth.user.displayName}`;
-      storeSubtitle.textContent = 'Manage listings, track sales, and keep your shop growing.';
+      storeTitle.textContent = `Vendor Portal — ${auth.user.displayName}`;
+      storeSubtitle.textContent = 'Add and manage your product listings.';
       cartButton.classList.add('hidden');
+      document.getElementById('receivedOrdersLink').classList.remove('hidden');
       storeContent.innerHTML = `
-        <div class="stats-grid">
-          <div class="store-card">
-            <h3>Current Inventory</h3>
-            <ul>
-              <li>Product listings: pending live sync</li>
-              <li>Active promotions: 0</li>
-              <li>Pending restocks: 0</li>
-            </ul>
-          </div>
-          <div class="store-card">
-            <h3>Sales Snapshot</h3>
-            <ul>
-              <li>Today: data refreshed on page load</li>
-              <li>This week: data refreshed on page load</li>
-              <li>Revenue: data refreshed on page load</li>
-            </ul>
-          </div>
-        </div>
         <div class="store-card">
-          <h3>Product Management</h3>
           <div id="productManager"></div>
         </div>
       `;
@@ -820,174 +854,142 @@
       await renderVendorManagement();
     }
 
+    function productFormHTML(vendorSelectHTML = '') {
+      return `
+        <div class="product-form-card">
+          <h4 id="productFormTitle">Add New Product</h4>
+          <form id="productForm">
+            <input type="hidden" id="productId" value="">
+            ${vendorSelectHTML}
+            <label for="productName">Product Name *</label>
+            <input type="text" id="productName" placeholder="Name" required>
+            <label for="productDescription">Description *</label>
+            <textarea id="productDescription" placeholder="Description" required></textarea>
+            <label for="productPrice">Price *</label>
+            <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0" required>
+            <label for="productCategory">Category</label>
+            <input type="text" id="productCategory" placeholder="e.g. Electronics, Clothing">
+            <label for="productColors">Colors (comma-separated)</label>
+            <input type="text" id="productColors" placeholder="e.g. Red, Blue, Black">
+            <label for="productSizes">Sizes (comma-separated)</label>
+            <input type="text" id="productSizes" placeholder="e.g. S, M, L, XL">
+            <label for="productWarranty">Warranty Period</label>
+            <input type="text" id="productWarranty" placeholder="e.g. 1 Year, 6 Months, None">
+            <label for="productStockCount">Stock Count *</label>
+            <input type="number" id="productStockCount" placeholder="0" min="0" value="0" required>
+            <label>Gallery Images</label>
+            <div id="formGalleryList" style="margin-bottom:8px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="url" id="formGalleryUrl" placeholder="https://example.com/image.jpg" style="flex:1;">
+              <button type="button" id="addFormGalleryBtn" class="submit-button alt" style="white-space:nowrap;">+ Add Image</button>
+            </div>
+            <div class="form-buttons">
+              <button type="submit" class="submit-button" id="saveProductButton">Save Product</button>
+              <button type="button" class="submit-button alt hidden" id="cancelEditButton">Cancel</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function vendorProductTableHTML(products) {
+      if (!products.length) return '<p>No products yet.</p>';
+      return `
+        <table class="product-table">
+          <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td>${p.name}</td>
+                <td>${p.category || 'N/A'}</td>
+                <td>${formatCurrency(p.price)}</td>
+                <td>${p.stockCount}</td>
+                <td>
+                  <button class="edit-product-button" data-id="${p.id}">Edit</button>
+                  <button class="gallery-button" data-id="${p.id}">Gallery</button>
+                  <button class="delete-product-button" data-id="${p.id}">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function adminProductTableHTML(products) {
+      if (!products.length) return '<p>No products in the system.</p>';
+      return `
+        <table class="product-table">
+          <thead><tr><th>Name</th><th>Category</th><th>Vendor</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td>${p.name}</td>
+                <td>${p.category || 'N/A'}</td>
+                <td>${p.vendorUsername || 'N/A'}</td>
+                <td>${formatCurrency(p.price)}</td>
+                <td>${p.stockCount}</td>
+                <td>
+                  <button class="edit-product-button" data-id="${p.id}">Edit</button>
+                  <button class="delete-product-button" data-id="${p.id}">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
     async function renderVendorManagement() {
       const manager = document.getElementById('productManager');
-      manager.innerHTML = '<p>Loading product manager...</p>';
+      manager.innerHTML = `
+        <div class="vendor-manager">
+          <div class="product-list">
+            <h4>Your Products</h4>
+            <div id="productListContainer"><p>Loading...</p></div>
+          </div>
+          ${productFormHTML()}
+        </div>
+      `;
+      attachProductManagerEvents();
+
       try {
         const products = await fetchProducts();
-        const ownedProducts = products.filter(product => product.vendorEmail.toLowerCase() === currentAuth.user.email.toLowerCase());
-        manager.innerHTML = `
-          <div class="vendor-manager">
-            <div class="product-list">
-              <h4>Your Products</h4>
-              ${ownedProducts.length > 0 ? `
-                <table class="product-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Category</th>
-                      <th>Color</th>
-                      <th>Size</th>
-                      <th>Price</th>
-                      <th>Stock</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${ownedProducts.map(product => `
-                      <tr>
-                        <td>${product.name}</td>
-                        <td>${product.category || 'N/A'}</td>
-                        <td>${product.color || 'N/A'}</td>
-                        <td>${product.size || 'N/A'}</td>
-                        <td>${formatCurrency(product.price)}</td>
-                        <td>${product.inStock ? 'In Stock' : 'Out of Stock'}</td>
-                        <td>
-                          <button class="edit-product-button" data-id="${product.id}">Edit</button>
-                          <button class="gallery-button" data-id="${product.id}">Gallery</button>
-                          <button class="delete-product-button" data-id="${product.id}">Delete</button>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              ` : '<p>No products created yet. Add one below.</p>'}
-            </div>
-            <div class="product-form-card">
-              <h4 id="productFormTitle">Add New Product</h4>
-              <form id="productForm">
-                <input type="hidden" id="productId" value="">
-                <label for="productName">Product Name</label>
-                <input type="text" id="productName" placeholder="Name" required>
-
-                <label for="productDescription">Description</label>
-                <textarea id="productDescription" placeholder="Description" required></textarea>
-
-                <label for="productPrice">Price</label>
-                <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0" required>
-
-                <label for="productCategory">Category</label>
-                <input type="text" id="productCategory" placeholder="e.g., Electronics">
-
-                <label for="productColor">Color</label>
-                <input type="text" id="productColor" placeholder="e.g., Black">
-
-                <label for="productSize">Size</label>
-                <input type="text" id="productSize" placeholder="e.g., Medium">
-
-                <label for="productStock">
-                  <input type="checkbox" id="productStock" checked> In Stock
-                </label>
-
-                <div class="form-buttons">
-                  <button type="submit" class="submit-button" id="saveProductButton">Save Product</button>
-                  <button type="button" class="submit-button alt hidden" id="cancelEditButton">Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        `;
-
-        attachProductManagerEvents();
-      } catch (error) {
-        manager.innerHTML = `<p class="error-message">Unable to load products. Please try again later.</p>`;
+        const owned = products.filter(p => p.vendorId === currentAuth.user.userID);
+        document.getElementById('productListContainer').innerHTML = vendorProductTableHTML(owned);
+      } catch {
+        document.getElementById('productListContainer').innerHTML =
+          '<p class="error-message">Could not load products — make sure the database columns have been added.</p>';
       }
     }
 
     async function renderAdminManagement() {
       const manager = document.getElementById('productManager');
-      manager.innerHTML = '<p>Loading product manager...</p>';
+
+      const vendors = await fetchVendors().catch(() => []);
+      const vendorSelectHTML = `
+        <label for="productVendorId">Vendor *</label>
+        <select id="productVendorId" required>
+          <option value="">Select a vendor</option>
+          ${vendors.map(v => `<option value="${v.userID}">${v.username} (${v.email})</option>`).join('')}
+        </select>
+      `;
+
+      manager.innerHTML = `
+        <div class="vendor-manager">
+          <div class="product-list">
+            <h4>All Products</h4>
+            <div id="productListContainer"><p>Loading...</p></div>
+          </div>
+          ${productFormHTML(vendorSelectHTML)}
+        </div>
+      `;
+      attachAdminProductManagerEvents();
+
       try {
         const products = await fetchProducts();
-        manager.innerHTML = `
-          <div class="vendor-manager">
-            <div class="product-list">
-              <h4>All Products</h4>
-              ${products.length > 0 ? `
-                <table class="product-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Category</th>
-                      <th>Color</th>
-                      <th>Size</th>
-                      <th>Price</th>
-                      <th>Vendor</th>
-                      <th>Stock</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${products.map(product => `
-                      <tr>
-                        <td>${product.name}</td>
-                        <td>${product.category || 'N/A'}</td>
-                        <td>${product.color || 'N/A'}</td>
-                        <td>${product.size || 'N/A'}</td>
-                        <td>${formatCurrency(product.price)}</td>
-                        <td>${product.vendorEmail}</td>
-                        <td>${product.inStock ? 'In Stock' : 'Out of Stock'}</td>
-                        <td>
-                          <button class="edit-product-button" data-id="${product.id}">Edit</button>
-                          <button class="delete-product-button" data-id="${product.id}">Delete</button>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              ` : '<p>No products in the system.</p>'}
-            </div>
-            <div class="product-form-card">
-              <h4 id="productFormTitle">Add New Product</h4>
-              <form id="productForm">
-                <input type="hidden" id="productId" value="">
-                <label for="productName">Product Name</label>
-                <input type="text" id="productName" placeholder="Name" required>
-
-                <label for="productDescription">Description</label>
-                <textarea id="productDescription" placeholder="Description" required></textarea>
-
-                <label for="productPrice">Price</label>
-                <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0" required>
-
-                <label for="productCategory">Category</label>
-                <input type="text" id="productCategory" placeholder="e.g., Electronics">
-
-                <label for="productColor">Color</label>
-                <input type="text" id="productColor" placeholder="e.g., Black">
-
-                <label for="productSize">Size</label>
-                <input type="text" id="productSize" placeholder="e.g., Medium">
-
-                <label for="productStock">
-                  <input type="checkbox" id="productStock" checked> In Stock
-                </label>
-
-                <label for="productVendor">Vendor Email</label>
-                <input type="email" id="productVendor" placeholder="vendor@example.com" required>
-
-                <div class="form-buttons">
-                  <button type="submit" class="submit-button" id="saveProductButton">Save Product</button>
-                  <button type="button" class="submit-button alt hidden" id="cancelEditButton">Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        `;
-
-        attachAdminProductManagerEvents();
-      } catch (error) {
-        manager.innerHTML = `<p class="error-message">Unable to load products. Please try again later.</p>`;
+        document.getElementById('productListContainer').innerHTML = adminProductTableHTML(products);
+      } catch {
+        document.getElementById('productListContainer').innerHTML =
+          '<p class="error-message">Could not load products — make sure the database columns have been added (see ALTER TABLE SQL).</p>';
       }
     }
 
@@ -998,6 +1000,19 @@
 
       productForm.addEventListener('submit', handleVendorProductFormSubmit);
       cancelButton.addEventListener('click', resetProductForm);
+
+      const addGalleryBtn = manager.querySelector('#addFormGalleryBtn');
+      if (addGalleryBtn) {
+        addGalleryBtn.addEventListener('click', () => {
+          const input = document.getElementById('formGalleryUrl');
+          const url = input.value.trim();
+          if (!url) return;
+          formGallery.push(url);
+          input.value = '';
+          renderFormGallery();
+        });
+      }
+      renderFormGallery();
 
       manager.addEventListener('click', async event => {
         const button = event.target;
@@ -1026,6 +1041,19 @@
       productForm.addEventListener('submit', handleAdminProductFormSubmit);
       cancelButton.addEventListener('click', resetAdminProductForm);
 
+      const addGalleryBtnAdmin = manager.querySelector('#addFormGalleryBtn');
+      if (addGalleryBtnAdmin) {
+        addGalleryBtnAdmin.addEventListener('click', () => {
+          const input = document.getElementById('formGalleryUrl');
+          const url = input.value.trim();
+          if (!url) return;
+          formGallery.push(url);
+          input.value = '';
+          renderFormGallery();
+        });
+      }
+      renderFormGallery();
+
       manager.addEventListener('click', async event => {
         const button = event.target;
         if (button.matches('.edit-product-button')) {
@@ -1040,53 +1068,46 @@
       });
     }
 
+    function collectProductFormFields() {
+      const colorsRaw = document.getElementById('productColors').value.trim();
+      const sizesRaw = document.getElementById('productSizes').value.trim();
+      return {
+        name: document.getElementById('productName').value.trim(),
+        description: document.getElementById('productDescription').value.trim(),
+        price: document.getElementById('productPrice').value.trim(),
+        category: document.getElementById('productCategory').value.trim(),
+        colors: colorsRaw ? colorsRaw.split(',').map(c => c.trim()).filter(Boolean) : [],
+        sizes: sizesRaw ? sizesRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+        warrantyPeriod: document.getElementById('productWarranty').value.trim(),
+        stockCount: parseInt(document.getElementById('productStockCount').value) || 0,
+        gallery: [...formGallery],
+      };
+    }
+
     async function handleVendorProductFormSubmit(event) {
       event.preventDefault();
       const productId = Number(document.getElementById('productId').value || 0);
-      const name = document.getElementById('productName').value.trim();
-      const description = document.getElementById('productDescription').value.trim();
-      const price = document.getElementById('productPrice').value.trim();
-      const category = document.getElementById('productCategory').value.trim();
-      const color = document.getElementById('productColor').value.trim();
-      const size = document.getElementById('productSize').value.trim();
-      const inStock = document.getElementById('productStock').checked;
+      const fields = collectProductFormFields();
 
-      if (!name || !description || !price) {
+      if (!fields.name || !fields.description || !fields.price) {
         alert('Please fill all required fields.');
         return;
       }
 
       const url = productId > 0 ? `/api/products/${productId}` : '/api/products';
       const method = productId > 0 ? 'PUT' : 'POST';
-      const body = {
-        role: currentAuth.role,
-        email: currentAuth.user.email,
-        vendorCode: currentAuth.vendorCode,
-        name,
-        description,
-        price,
-        category,
-        color,
-        size,
-        inStock
-      };
 
       try {
         const response = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify({ userId: currentAuth.user.userID, ...fields })
         });
         const result = await response.json();
-
-        if (!response.ok) {
-          alert(result.message || 'Unable to save product.');
-          return;
-        }
-
+        if (!response.ok) { alert(result.message || 'Unable to save product.'); return; }
         resetProductForm();
         await renderVendorManagement();
-      } catch (error) {
+      } catch {
         alert('Unable to reach the server. Please try again later.');
       }
     }
@@ -1094,85 +1115,61 @@
     async function handleAdminProductFormSubmit(event) {
       event.preventDefault();
       const productId = Number(document.getElementById('productId').value || 0);
-      const name = document.getElementById('productName').value.trim();
-      const description = document.getElementById('productDescription').value.trim();
-      const price = document.getElementById('productPrice').value.trim();
-      const category = document.getElementById('productCategory').value.trim();
-      const color = document.getElementById('productColor').value.trim();
-      const size = document.getElementById('productSize').value.trim();
-      const inStock = document.getElementById('productStock').checked;
+      const vendorId = Number(document.getElementById('productVendorId').value);
+      const fields = collectProductFormFields();
 
-      if (!name || !description || !price) {
+      if (!fields.name || !fields.description || !fields.price) {
         alert('Please fill all required fields.');
+        return;
+      }
+      if (!vendorId) {
+        alert('Please select a vendor.');
         return;
       }
 
       const url = productId > 0 ? `/api/products/${productId}` : '/api/products';
       const method = productId > 0 ? 'PUT' : 'POST';
-      const body = {
-        role: 'admin',
-        email: currentAuth.user.email,
-        adminCode: currentAuth.adminCode,
-        name,
-        description,
-        price,
-        category,
-        color,
-        size,
-        inStock
-      };
-
-      if (method === 'POST') {
-        const vendorEmail = document.getElementById('productVendor').value.trim();
-        if (!vendorEmail) {
-          alert('Please specify the vendor email.');
-          return;
-        }
-        body.vendorEmail = vendorEmail;
-      }
 
       try {
         const response = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify({ userId: currentAuth.user.userID, vendorId, ...fields })
         });
         const result = await response.json();
-
-        if (!response.ok) {
-          alert(result.message || 'Unable to save product.');
-          return;
-        }
-
+        if (!response.ok) { alert(result.message || 'Unable to save product.'); return; }
         resetAdminProductForm();
         await renderAdminManagement();
-      } catch (error) {
+      } catch {
         alert('Unable to reach the server. Please try again later.');
       }
+    }
+
+    function populateProductFormFields(product) {
+      document.getElementById('productId').value = product.id;
+      document.getElementById('productName').value = product.name;
+      document.getElementById('productDescription').value = product.description || '';
+      document.getElementById('productPrice').value = product.price;
+      document.getElementById('productCategory').value = product.category || '';
+      document.getElementById('productColors').value = (product.colors || []).join(', ');
+      document.getElementById('productSizes').value = (product.sizes || []).join(', ');
+      document.getElementById('productWarranty').value = product.warrantyPeriod || '';
+      document.getElementById('productStockCount').value = product.stockCount || 0;
+      formGallery = [...(product.gallery || [])];
+      renderFormGallery();
+      document.getElementById('productFormTitle').textContent = 'Edit Product';
+      document.getElementById('saveProductButton').textContent = 'Update Product';
+      document.getElementById('cancelEditButton').classList.remove('hidden');
     }
 
     async function loadVendorProductForEdit(productId) {
       try {
         const products = await fetchProducts();
-        const product = products.find(item => item.id === productId && item.vendorEmail.toLowerCase() === currentAuth.user.email.toLowerCase());
-        if (!product) {
-          alert('Product not found.');
-          return;
-        }
-
+        const product = products.find(p => p.id === productId && p.vendorId === currentAuth.user.userID);
+        if (!product) { alert('Product not found.'); return; }
         editingProductId = productId;
-        document.getElementById('productId').value = product.id;
-        document.getElementById('productName').value = product.name;
-        document.getElementById('productDescription').value = product.description;
-        document.getElementById('productPrice').value = product.price;
-        document.getElementById('productCategory').value = product.category || '';
-        document.getElementById('productColor').value = product.color || '';
-        document.getElementById('productSize').value = product.size || '';
-        document.getElementById('productStock').checked = product.inStock;
-        document.getElementById('productFormTitle').textContent = 'Edit Product';
-        document.getElementById('saveProductButton').textContent = 'Update Product';
-        document.getElementById('cancelEditButton').classList.remove('hidden');
-      } catch (error) {
+        populateProductFormFields(product);
+      } catch {
         alert('Unable to load product for editing.');
       }
     }
@@ -1180,26 +1177,12 @@
     async function loadAdminProductForEdit(productId) {
       try {
         const products = await fetchProducts();
-        const product = products.find(item => item.id === productId);
-        if (!product) {
-          alert('Product not found.');
-          return;
-        }
-
+        const product = products.find(p => p.id === productId);
+        if (!product) { alert('Product not found.'); return; }
         editingProductId = productId;
-        document.getElementById('productId').value = product.id;
-        document.getElementById('productName').value = product.name;
-        document.getElementById('productDescription').value = product.description;
-        document.getElementById('productPrice').value = product.price;
-        document.getElementById('productCategory').value = product.category || '';
-        document.getElementById('productColor').value = product.color || '';
-        document.getElementById('productSize').value = product.size || '';
-        document.getElementById('productStock').checked = product.inStock;
-        document.getElementById('productVendor').value = product.vendorEmail;
-        document.getElementById('productFormTitle').textContent = 'Edit Product';
-        document.getElementById('saveProductButton').textContent = 'Update Product';
-        document.getElementById('cancelEditButton').classList.remove('hidden');
-      } catch (error) {
+        populateProductFormFields(product);
+        document.getElementById('productVendorId').value = product.vendorId || '';
+      } catch {
         alert('Unable to load product for editing.');
       }
     }
@@ -1213,11 +1196,7 @@
         const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            role: 'vendor',
-            email: currentAuth.user.email,
-            vendorCode: currentAuth.vendorCode
-          })
+          body: JSON.stringify({ userId: currentAuth.user.userID })
         });
         const result = await response.json();
         if (!response.ok) {
@@ -1239,11 +1218,7 @@
         const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            role: 'admin',
-            email: currentAuth.user.email,
-            adminCode: currentAuth.adminCode
-          })
+          body: JSON.stringify({ userId: currentAuth.user.userID })
         });
         const result = await response.json();
         if (!response.ok) {
@@ -1259,32 +1234,45 @@
     function resetProductForm() {
       editingProductId = null;
       const form = document.getElementById('productForm');
-      if (!form) {
-        return;
-      }
+      if (!form) return;
       form.reset();
       document.getElementById('productId').value = '';
-      document.getElementById('productStock').checked = true;
+      document.getElementById('productStockCount').value = '0';
+      formGallery = [];
+      renderFormGallery();
       document.getElementById('productFormTitle').textContent = 'Add New Product';
       document.getElementById('saveProductButton').textContent = 'Save Product';
       document.getElementById('cancelEditButton').classList.add('hidden');
     }
 
     function resetAdminProductForm() {
-      editingProductId = null;
-      const form = document.getElementById('productForm');
-      if (!form) {
-        return;
-      }
-      form.reset();
-      document.getElementById('productId').value = '';
-      document.getElementById('productStock').checked = true;
-      document.getElementById('productFormTitle').textContent = 'Add New Product';
-      document.getElementById('saveProductButton').textContent = 'Save Product';
-      document.getElementById('cancelEditButton').classList.add('hidden');
+      resetProductForm();
     }
 
     let currentGalleryProductId = null;
+    let formGallery = [];
+
+    function renderFormGallery() {
+      const list = document.getElementById('formGalleryList');
+      if (!list) return;
+      if (!formGallery.length) {
+        list.innerHTML = '<p style="color:#94a3b8;font-size:0.85em;margin:0;">No images added yet.</p>';
+        return;
+      }
+      list.innerHTML = formGallery.map((url, i) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:#1e293b;padding:6px 8px;border-radius:6px;">
+          <img src="${url}" alt="img" style="width:48px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+          <span style="flex:1;font-size:0.78em;color:#94a3b8;word-break:break-all;">${url}</span>
+          <button type="button" class="remove-form-gallery-btn" data-index="${i}" style="background:none;border:none;color:#f87171;font-size:1.2em;cursor:pointer;flex-shrink:0;">&times;</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.remove-form-gallery-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          formGallery.splice(parseInt(btn.dataset.index), 1);
+          renderFormGallery();
+        });
+      });
+    }
 
     async function openGalleryManagement(productId) {
       currentGalleryProductId = productId;
@@ -1424,6 +1412,111 @@
       }
     }
 
+    // ===== REVIEWS =====
+
+    let currentReviewProductId = null;
+
+    function attachReviewEvents() {
+      document.querySelectorAll('.review-btn').forEach(btn => {
+        btn.addEventListener('click', () => openReviewsModal(
+          parseInt(btn.dataset.productId), btn.dataset.productName
+        ));
+      });
+    }
+
+    async function openReviewsModal(productId, productName) {
+      currentReviewProductId = productId;
+      document.getElementById('reviewsModalTitle').textContent = `Reviews — ${productName}`;
+      document.getElementById('reviewRating').value = '0';
+      document.getElementById('reviewText').value = '';
+      setStars(0);
+      document.getElementById('reviewsModal').classList.remove('hidden');
+      await loadReviews(productId);
+    }
+
+    async function loadReviews(productId) {
+      const container = document.getElementById('existingReviews');
+      container.innerHTML = '<p style="color:#94a3b8;font-size:0.85em;">Loading...</p>';
+      try {
+        const res = await fetch(`/api/products/${productId}/reviews`);
+        const data = await res.json();
+        const reviews = data.reviews || [];
+        const alreadyReviewed = currentAuth && reviews.some(r => r.userId === currentAuth.user.userID);
+
+        if (reviews.length === 0) {
+          container.innerHTML = '<p style="color:#94a3b8;font-size:0.85em;text-align:center;">No reviews yet. Be the first!</p>';
+        } else {
+          container.innerHTML = reviews.map(r => `
+            <div style="border-bottom:1px solid #334155;padding:10px 0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong style="font-size:0.9em;">${r.username}</strong>
+                <span style="color:#f59e0b;">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+              </div>
+              <p style="margin:4px 0 0;font-size:0.85em;color:#cbd5e1;">${r.text || ''}</p>
+              <p style="margin:2px 0 0;font-size:0.75em;color:#475569;">${r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''}</p>
+            </div>
+          `).join('');
+        }
+
+        const isCustomer = currentAuth && currentAuth.role === 'customer';
+        document.getElementById('reviewFormWrap').classList.toggle('hidden', !isCustomer || alreadyReviewed);
+        document.getElementById('alreadyReviewedMsg').classList.toggle('hidden', !alreadyReviewed || !isCustomer);
+      } catch {
+        container.innerHTML = '<p style="color:#f87171;font-size:0.85em;">Could not load reviews.</p>';
+      }
+    }
+
+    function setStars(value) {
+      document.querySelectorAll('#starSelector .star').forEach(s => {
+        s.textContent = parseInt(s.dataset.value) <= value ? '★' : '☆';
+        s.style.color = parseInt(s.dataset.value) <= value ? '#f59e0b' : '#94a3b8';
+      });
+    }
+
+    document.querySelectorAll('#starSelector .star').forEach(star => {
+      star.addEventListener('click', () => {
+        const val = parseInt(star.dataset.value);
+        document.getElementById('reviewRating').value = val;
+        setStars(val);
+      });
+      star.addEventListener('mouseover', () => setStars(parseInt(star.dataset.value)));
+      star.addEventListener('mouseleave', () => setStars(parseInt(document.getElementById('reviewRating').value)));
+    });
+
+    document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rating = parseInt(document.getElementById('reviewRating').value);
+      if (!rating) { alert('Please select a star rating.'); return; }
+      try {
+        const res = await fetch(`/api/products/${currentReviewProductId}/reviews`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentAuth.user.userID,
+            rating,
+            text: document.getElementById('reviewText').value.trim()
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('reviewText').value = '';
+          document.getElementById('reviewRating').value = '0';
+          setStars(0);
+          await loadReviews(currentReviewProductId);
+          await loadAndDisplayProducts(currentFilters);
+        } else {
+          alert(data.message || 'Could not submit review.');
+        }
+      } catch {
+        alert('Error submitting review.');
+      }
+    });
+
+    document.getElementById('closeReviewsModal').addEventListener('click', () => {
+      document.getElementById('reviewsModal').classList.add('hidden');
+      currentReviewProductId = null;
+    });
+
     // Modal event listeners
     cartButton.addEventListener('click', () => {
       renderCartItems();
@@ -1457,14 +1550,34 @@
 
     clearCartButton.addEventListener('click', clearCart);
 
-    checkoutButton.addEventListener('click', async () => {
+    checkoutButton.addEventListener('click', () => {
       if (cart.items.length === 0) {
         alert('Your cart is empty.');
         return;
       }
-      if (confirm('Place this order?')) {
-        await checkout();
-      }
+      const summary = document.getElementById('checkoutOrderSummary');
+      const total = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+      summary.innerHTML = `
+        <strong>Order Summary</strong>
+        <ul style="margin:8px 0;padding-left:16px;">
+          ${cart.items.map(i => `<li>${i.product_name} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}</li>`).join('')}
+        </ul>
+        <strong>Total: $${total.toFixed(2)}</strong>
+      `;
+      document.getElementById('checkoutForm').reset();
+      document.getElementById('checkoutModal').classList.remove('hidden');
+    });
+
+    document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await checkout();
+    });
+
+    document.getElementById('closeCheckoutModal').addEventListener('click', () => {
+      document.getElementById('checkoutModal').classList.add('hidden');
+    });
+    document.getElementById('cancelCheckoutButton').addEventListener('click', () => {
+      document.getElementById('checkoutModal').classList.add('hidden');
     });
 
     // Lightbox event listeners
@@ -1504,6 +1617,13 @@
       }
       if (e.target === galleryManagementModal) {
         closeGalleryManagement();
+      }
+      if (e.target === document.getElementById('reviewsModal')) {
+        document.getElementById('reviewsModal').classList.add('hidden');
+        currentReviewProductId = null;
+      }
+      if (e.target === document.getElementById('checkoutModal')) {
+        document.getElementById('checkoutModal').classList.add('hidden');
       }
       if (e.target === galleryLightbox) {
         closeLightbox();

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .page-container { background: #0f172a; }
+        .simple-header { background: #1e293b; border-bottom: 1px solid #334155; }
+        .simple-header .logo { color: #febd69; }
+        .simple-header nav a { color: #e2e8f0; }
+        .simple-header nav a:hover { color: #febd69; }
+        main { align-items: flex-start; padding: 32px 24px; }
+        .wrap { max-width: 700px; width: 100%; margin: 0 auto; }
+        .wrap h1 { font-size: 1.8rem; margin: 0 0 24px; color: #f1f5f9; }
+        .section-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .section-card h2 { margin: 0 0 18px; font-size: 1.1rem; color: #94a3b8; }
+        label { font-size: 0.85em; display: block; margin-bottom: 4px; color: #94a3b8; }
+        input, textarea, select {
+            background: #0f172a; color: #e2e8f0;
+            border: 1px solid #334155; border-radius: 6px;
+            padding: 8px 10px; width: 100%; box-sizing: border-box;
+            font-size: 0.95em; margin-bottom: 12px;
+        }
+        textarea { resize: vertical; }
+        select option { background: #1e293b; }
+        .order-select-wrap { display: none; }
+        .order-select-wrap.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header class="simple-header">
+            <a href="store.html" class="logo">amazona</a>
+            <nav>
+                <a href="my_orders.html">Orders</a>
+                <a href="my_account.html">Account</a>
+                <a href="store.html">Store</a>
+                <a href="index.html" id="logoutBtn">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div class="wrap">
+                <h1>My Requests</h1>
+
+                <div class="section-card">
+                    <h2>Submit a Request</h2>
+                    <form id="requestForm">
+                        <label>Request Type</label>
+                        <select id="reqType">
+                            <option value="complaint">General Complaint</option>
+                            <option value="refund">Refund Request</option>
+                            <option value="warranty">Warranty Claim</option>
+                        </select>
+
+                        <div class="order-select-wrap" id="orderSelectWrap">
+                            <label>Select Order <span style="color:#f87171;">*</span></label>
+                            <select id="reqOrderId">
+                                <option value="">Loading your orders...</option>
+                            </select>
+                        </div>
+
+                        <label>Title <span style="color:#f87171;">*</span></label>
+                        <input type="text" id="reqTitle" placeholder="Brief summary of your request" required>
+
+                        <label>Description <span style="color:#f87171;">*</span></label>
+                        <textarea id="reqDesc" rows="4" placeholder="Describe your issue in detail..." required></textarea>
+
+                        <button type="submit" class="submit-button" style="width:100%;">Submit Request</button>
+                    </form>
+                    <p id="reqMsg" style="margin-top:10px;font-size:0.9em;display:none;"></p>
+                </div>
+
+                <div class="section-card">
+                    <h2>Your Requests</h2>
+                    <div id="requests-list"><p style="color:#94a3b8;">Loading...</p></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const auth = JSON.parse(localStorage.getItem('authenticatedUser') || 'null');
+        if (!auth || !auth.user) {
+            document.getElementById('requests-list').innerHTML = '<p style="color:#94a3b8;">Please log in to view your requests.</p>';
+            document.getElementById('requestForm').style.display = 'none';
+        } else {
+            loadRequests();
+        }
+
+        const statusColor = {
+            pending: '#94a3b8', confirmed: '#22c55e',
+            processing: '#3b82f6', complete: '#a855f7', rejected: '#f87171'
+        };
+        const typeLabel = { complaint: 'Complaint', refund: 'Refund', warranty: 'Warranty' };
+        const typeColor = { complaint: '#f59e0b', refund: '#f87171', warranty: '#3b82f6' };
+
+        // Show/hide order dropdown based on type
+        const reqTypeEl = document.getElementById('reqType');
+        const orderWrap = document.getElementById('orderSelectWrap');
+        let ordersLoaded = false;
+
+        reqTypeEl.addEventListener('change', () => {
+            const needsOrder = reqTypeEl.value === 'refund' || reqTypeEl.value === 'warranty';
+            orderWrap.classList.toggle('visible', needsOrder);
+            if (needsOrder && !ordersLoaded) loadOrderOptions();
+        });
+
+        async function loadOrderOptions() {
+            const select = document.getElementById('reqOrderId');
+            select.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const res = await fetch(`/api/orders?userId=${auth.user.userID}`);
+                const orders = await res.json();
+                ordersLoaded = true;
+                if (!Array.isArray(orders) || orders.length === 0) {
+                    select.innerHTML = '<option value="">No orders found</option>';
+                    return;
+                }
+                select.innerHTML = '<option value="">— Select an order —</option>' +
+                    orders.map(o => `<option value="${o.id}">Order #${o.id} — ${o.product_name} ($${(o.price * o.quantity).toFixed(2)})</option>`).join('');
+            } catch {
+                select.innerHTML = '<option value="">Could not load orders</option>';
+            }
+        }
+
+        function loadRequests() {
+            fetch(`/api/requests?userId=${auth.user.userID}`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('requests-list');
+                    if (!Array.isArray(data) || data.length === 0) {
+                        list.innerHTML = '<p style="color:#94a3b8;">No requests yet.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(r => {
+                        const tc = typeColor[r.type] || '#94a3b8';
+                        const sc = statusColor[r.status] || '#94a3b8';
+                        const orderLine = r.orderProduct
+                            ? `<p style="margin:4px 0 0;font-size:0.8em;color:#64748b;">Order #${r.orderId} — ${r.orderProduct}</p>`
+                            : '';
+                        return `
+                        <div style="border-bottom:1px solid #334155;padding:14px 0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                    <span style="background:${tc}22;color:${tc};border:1px solid ${tc};border-radius:99px;padding:1px 10px;font-size:0.75em;font-weight:600;">${typeLabel[r.type] || r.type}</span>
+                                    <strong style="font-size:0.95em;">${r.title}</strong>
+                                </div>
+                                <span style="background:${sc}22;color:${sc};border:1px solid ${sc};border-radius:99px;padding:1px 10px;font-size:0.75em;font-weight:600;">${r.status}</span>
+                            </div>
+                            <p style="margin:0;font-size:0.85em;color:#94a3b8;">${r.description}</p>
+                            ${orderLine}
+                        </div>`;
+                    }).join('');
+                })
+                .catch(() => {
+                    document.getElementById('requests-list').innerHTML = '<p style="color:#f87171;">Could not load requests.</p>';
+                });
+        }
+
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('reqMsg');
+            const btn = e.target.querySelector('button[type=submit]');
+            const reqType = reqTypeEl.value;
+            const orderId = document.getElementById('reqOrderId').value;
+
+            if ((reqType === 'refund' || reqType === 'warranty') && !orderId) {
+                msg.style.display = 'block';
+                msg.style.color = '#f87171';
+                msg.textContent = 'Please select an order for this request type.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            msg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: auth.user.userID,
+                        type: reqType,
+                        orderId: orderId ? parseInt(orderId) : null,
+                        title: document.getElementById('reqTitle').value.trim(),
+                        description: document.getElementById('reqDesc').value.trim()
+                    })
+                });
+                const data = await res.json();
+                msg.style.display = 'block';
+                if (res.ok) {
+                    msg.style.color = '#22c55e';
+                    msg.textContent = 'Request submitted successfully!';
+                    e.target.reset();
+                    orderWrap.classList.remove('visible');
+                    ordersLoaded = false;
+                    loadRequests();
+                } else {
+                    msg.style.color = '#f87171';
+                    msg.textContent = data.message || 'Failed to submit request.';
+                }
+            } catch {
+                msg.style.display = 'block';
+                msg.style.color = '#f87171';
+                msg.textContent = 'Error submitting request.';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Submit Request';
+        });
+
+        document.getElementById('logoutBtn').onclick = () => localStorage.clear();
+    </script>
+</body>
+</html>

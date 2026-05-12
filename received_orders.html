@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Received Orders</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .page-container { background: #0f172a; }
+        .simple-header { background: #1e293b; border-bottom: 1px solid #334155; }
+        .simple-header .logo { color: #febd69; }
+        .simple-header nav a { color: #e2e8f0; }
+        .simple-header nav a:hover { color: #febd69; }
+        main { align-items: flex-start; padding: 32px 24px; }
+        .orders-wrap { max-width: 720px; width: 100%; margin: 0 auto; }
+        .orders-wrap h1 { font-size: 1.8rem; margin: 0 0 24px; color: #f1f5f9; }
+        select.status-select {
+            background: #0f172a; color: #e2e8f0;
+            border: 1px solid #334155; border-radius: 6px;
+            padding: 4px 8px; font-size: 0.85em;
+        }
+    </style>
 </head>
 <body>
     <div class="page-container">
@@ -17,49 +33,107 @@
             </nav>
         </header>
         <main>
-            <div class="card">
-                <h1>Received Orders</h1>
-                <div id="received-orders-list"></div>
+            <div class="orders-wrap">
+                <h1 id="page-title">Received Orders</h1>
+                <div id="orders-list"><p style="color:#94a3b8;">Loading...</p></div>
             </div>
         </main>
     </div>
     <script>
-    const vendorEmail = localStorage.getItem('email');
-    const role = localStorage.getItem('role');
-    if (!vendorEmail || role !== 'vendor') {
-        document.getElementById('received-orders-list').innerHTML = '<p>Please log in as a vendor to view received orders.</p>';
-    } else {
-        fetch('/api/orders', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Filter orders where any item is for this vendor
-                const received = data.orders.filter(order =>
-                    order.items.some(item => item.vendorEmail && item.vendorEmail.toLowerCase() === vendorEmail)
-                );
-                if (received.length === 0) {
-                    document.getElementById('received-orders-list').innerHTML = '<p>No received orders found.</p>';
-                } else {
-                    document.getElementById('received-orders-list').innerHTML = received.map(order => `
-                        <div class="order">
-                            <h3>Order #${order.id} (${order.date})</h3>
-                            <p>Status: ${order.status || 'N/A'}</p>
-                            <p>Total: $${order.totalPrice}</p>
-                            <ul>
-                                ${order.items.filter(item => item.vendorEmail && item.vendorEmail.toLowerCase() === vendorEmail).map(item => `<li>${item.product_name} x${item.quantity} (${item.size}, ${item.color})</li>`).join('')}
-                            </ul>
-                        </div>
-                    `).join('');
-                }
-            } else {
-                document.getElementById('received-orders-list').innerHTML = `<p>${data.message}</p>`;
-            }
-        });
-    }
-        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); };
+        const auth = JSON.parse(localStorage.getItem('authenticatedUser') || 'null');
+        const STATUSES = ['confirmed', 'shipped', 'out for delivery'];
+
+        if (!auth || !auth.user || (auth.role !== 'vendor' && auth.role !== 'admin')) {
+            document.getElementById('orders-list').innerHTML = '<p style="color:#94a3b8;">Access restricted to vendors and admins.</p>';
+        } else {
+            if (auth.role === 'admin') document.getElementById('page-title').textContent = 'All Orders (Admin)';
+
+            const url = auth.role === 'admin'
+                ? `/api/orders?isAdmin=true`
+                : `/api/orders?vendorId=${auth.user.userID}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('orders-list');
+                    if (!Array.isArray(data) || data.length === 0) {
+                        list.innerHTML = '<p style="color:#94a3b8;">No orders found.</p>';
+                        return;
+                    }
+                    renderOrders(data);
+                })
+                .catch(() => {
+                    document.getElementById('orders-list').innerHTML = '<p style="color:#f87171;">Could not load orders.</p>';
+                });
+        }
+
+        function renderOrders(orders) {
+            const statusColor = {
+                confirmed: '#22c55e', shipped: '#3b82f6',
+                'out for delivery': '#f59e0b', pending: '#94a3b8'
+            };
+
+            document.getElementById('orders-list').innerHTML = orders.map(order => `
+                <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                        <span style="font-weight:600;color:#94a3b8;font-size:0.85em;">ORDER #${order.id}</span>
+                        <span style="background:${statusColor[order.status] || '#94a3b8'}22;color:${statusColor[order.status] || '#94a3b8'};border:1px solid ${statusColor[order.status] || '#94a3b8'};border-radius:99px;padding:2px 12px;font-size:0.8em;font-weight:600;">
+                            ${order.status}
+                        </span>
+                    </div>
+                    <p style="margin:0 0 6px;font-size:1em;font-weight:600;">${order.product_name}</p>
+                    <p style="margin:0 0 4px;font-size:0.85em;color:#94a3b8;">
+                        Qty: ${order.quantity}
+                        ${order.size ? ' &nbsp;·&nbsp; Size: ' + order.size : ''}
+                        ${order.color ? ' &nbsp;·&nbsp; Color: ' + order.color : ''}
+                    </p>
+                    <p style="margin:0 0 4px;font-size:0.85em;color:#94a3b8;">Vendor: ${order.vendorEmail}</p>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                        <span style="font-weight:600;">$${(order.price * order.quantity).toFixed(2)}</span>
+                        <span style="font-size:0.75em;color:#475569;">${order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}</span>
+                    </div>
+                    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <label style="font-size:0.85em;color:#94a3b8;">Update status:</label>
+                        <select data-order-id="${order.id}" class="status-select">
+                            ${STATUSES.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                        <button data-order-id="${order.id}" class="update-status-btn submit-button" style="padding:5px 14px;font-size:0.85em;">Save</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.update-status-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const orderId = btn.dataset.orderId;
+                    const select = document.querySelector(`.status-select[data-order-id="${orderId}"]`);
+                    const newStatus = select.value;
+                    btn.textContent = 'Saving...';
+                    btn.disabled = true;
+                    try {
+                        const res = await fetch(`/api/orders/${orderId}/status`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: newStatus })
+                        });
+                        const result = await res.json();
+                        if (res.ok) {
+                            btn.textContent = 'Saved!';
+                            setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
+                        } else {
+                            alert(result.message || 'Failed to update.');
+                            btn.textContent = 'Save';
+                            btn.disabled = false;
+                        }
+                    } catch {
+                        alert('Error updating status.');
+                        btn.textContent = 'Save';
+                        btn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        document.getElementById('logoutBtn').onclick = () => localStorage.clear();
     </script>
 </body>
 </html>
